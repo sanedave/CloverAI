@@ -20,9 +20,19 @@ export function MessageItem({ message }: MessageItemProps) {
       window.speechSynthesis.cancel(); // Stop any currently playing speech
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.lang = 'en-US'; // Set language for better voice selection
-      // You could experiment with setting specific voices if needed:
-      // const voices = window.speechSynthesis.getVoices();
-      // utterance.voice = voices.find(voice => voice.name === 'Your Preferred Voice');
+
+      // Attempt to select a non-default US English voice if available
+      // Note: getVoices() can be initially empty and populates asynchronously.
+      // This is a best-effort attempt.
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        const preferredVoice = voices.find(voice => voice.lang === 'en-US' && !voice.default);
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
+        }
+        // If no non-default en-US voice, it will use the browser's default for en-US.
+      }
+
       window.speechSynthesis.speak(utterance);
     } else {
       toast({
@@ -84,7 +94,7 @@ export function MessageItem({ message }: MessageItemProps) {
               {message.text && (
                 <div className="flex items-start gap-2 mb-2">
                   <p className="text-sm whitespace-pre-wrap flex-grow">{message.text}</p>
-                  {!isUser && (
+                  {!isUser && message.text && ( // Ensure text exists before showing button
                      <button
                         onClick={() => handleSpeak(message.text!)}
                         className="p-1 text-card-foreground/70 hover:text-card-foreground transition-colors shrink-0"
@@ -116,7 +126,7 @@ export function MessageItem({ message }: MessageItemProps) {
           ) : message.text ? ( // Regular text message (AI or User)
              <div className="flex items-start gap-2">
                 <p className="text-sm whitespace-pre-wrap flex-grow">{message.text}</p>
-                {!isUser && ( // TTS button only for AI messages
+                {!isUser && message.text && ( // TTS button only for AI messages, ensure text exists
                   <button
                     onClick={() => handleSpeak(message.text!)}
                      className="p-1 text-card-foreground/70 hover:text-card-foreground transition-colors shrink-0"
