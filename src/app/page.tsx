@@ -8,7 +8,7 @@ import { MessageInput } from '@/components/chat/message-input';
 import { nanoid } from 'nanoid'; // For generating unique IDs
 import { chatAssistant, type ChatAssistantInput, type ChatAssistantOutput } from '@/ai/flows/chatAssistantFlow';
 
-import { Settings, Sun, Moon, Palette, Info, Phone, Mail, UserCircle } from 'lucide-react';
+import { Settings, Sun, Moon, Palette, Info, Phone, UserCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
+  DropdownMenuPortal, // Added import
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -329,3 +330,5 @@ export default function ChatPage() {
     </div>
   );
 }
+
+    
