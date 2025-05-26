@@ -21,7 +21,7 @@ const MOCK_CURRENT_USER: Participant = {
 const AI_ASSISTANT_PARTICIPANT: Participant = {
   id: 'user_ai_assistant',
   name: 'AI Assistant',
-  avatarUrl: 'https://placehold.co/100x100/4CAF50/FFFFFF.png', // Green placeholder for Clover AI
+  avatarUrl: 'https://placehold.co/100x100/4CAF50/FFFFFF.png', // Green placeholder for AI
   status: 'online',
   isCurrentUser: false,
 };
@@ -29,8 +29,6 @@ const AI_ASSISTANT_PARTICIPANT: Participant = {
 // Mock other participants
 const MOCK_PARTICIPANTS: Participant[] = [
   MOCK_CURRENT_USER,
-  { id: 'user_jane', name: 'Jane Doe', avatarUrl: 'https://placehold.co/100x100.png?a=2', status: 'online' },
-  { id: 'user_john', name: 'John Smith', avatarUrl: 'https://placehold.co/100x100.png?a=3', status: 'offline' },
   AI_ASSISTANT_PARTICIPANT,
 ];
 
@@ -77,7 +75,7 @@ export default function ChatPage() {
             sender: 'other',
             userName: aiParticipant.name,
             avatarUrl: aiParticipant.avatarUrl,
-            dataAiHint: 'clover logo',
+            dataAiHint: 'leaf logo', // Updated hint
           };
           setMessages((prevMessages) => [...prevMessages, assistantMessage]);
         })
@@ -90,7 +88,7 @@ export default function ChatPage() {
             sender: 'other',
             userName: aiParticipant.name, 
             avatarUrl: aiParticipant.avatarUrl, 
-            dataAiHint: 'clover logo',
+            dataAiHint: 'leaf logo', // Updated hint
           };
           setMessages((prevMessages) => [...prevMessages, assistantErrorMessage]);
         });
