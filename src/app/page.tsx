@@ -332,11 +332,15 @@ export default function ChatPage() {
             <ul className="list-none space-y-1 mt-2">
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground"/> 
-                <span>Email: contact@ehiremenoyas.dev (placeholder)</span>
+                <a href="mailto:sturdyroom863@gmail.com" className="hover:underline text-foreground">
+                  Email: sturdyroom863@gmail.com
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground"/> 
-                <span>Phone: +1 (555) 123-4567 (placeholder)</span>
+                <a href="https://wa.me/8123033820" target="_blank" rel="noopener noreferrer" className="hover:underline text-foreground">
+                  WhatsApp: 08123033820
+                </a>
               </li>
             </ul>
           </div>
