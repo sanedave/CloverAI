@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import type { Message, Participant } from '@/types/chat';
 import { MessageList } from '@/components/chat/message-list';
 import { MessageInput } from '@/components/chat/message-input';
-import { ParticipantsPanel } from '@/components/chat/participants-panel';
+// ParticipantsPanel import is no longer needed if the panel is removed
+// import { ParticipantsPanel } from '@/components/chat/participants-panel';
 import { nanoid } from 'nanoid'; // For generating unique IDs
 
 // Mock current user
@@ -111,10 +112,12 @@ export default function ChatPage() {
         <MessageInput onSendMessage={handleSendMessage} />
       </main>
 
-      {/* Participants Panel - hidden on small screens, shown on medium and up */}
+      {/* Participants Panel has been removed */}
+      {/* 
       <aside className="hidden md:flex md:w-80 lg:w-96 border-l border-border bg-card">
         <ParticipantsPanel participants={participants} currentUser={currentUser} />
       </aside>
+      */}
     </div>
   );
 }
