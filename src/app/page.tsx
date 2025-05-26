@@ -8,7 +8,7 @@ import { MessageInput } from '@/components/chat/message-input';
 import { nanoid } from 'nanoid'; // For generating unique IDs
 import { chatAssistant, type ChatAssistantInput, type ChatAssistantOutput } from '@/ai/flows/chatAssistantFlow';
 
-import { Settings, Sun, Moon, Palette, Info, Phone, UserCircle, Mail } from 'lucide-react'; // Added Mail
+import { Settings, Sun, Moon, Palette, Info, Phone, UserCircle, Mail } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -306,20 +306,22 @@ export default function ChatPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><Phone className="h-5 w-5 text-primary"/>Contact Us</DialogTitle>
-            <DialogDescription className="text-left pt-2">
-              For inquiries, please reach out to EHIREMEN OYAS:
-              <ul className="list-none space-y-1 mt-2">
-                <li className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground"/> 
-                  <span>Email: contact@ehiremenoyas.dev (placeholder)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground"/> 
-                  <span>Phone: +1 (555) 123-4567 (placeholder)</span>
-                </li>
-              </ul>
-            </DialogDescription>
+            {/* DialogDescription removed from here to prevent p > ul nesting */}
           </DialogHeader>
+          {/* Content previously in DialogDescription, now in a div styled similarly */}
+          <div className="text-sm text-muted-foreground text-left">
+            <p>For inquiries, please reach out to EHIREMEN OYAS:</p>
+            <ul className="list-none space-y-1 mt-2">
+              <li className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground"/> 
+                <span>Email: contact@ehiremenoyas.dev (placeholder)</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground"/> 
+                <span>Phone: +1 (555) 123-4567 (placeholder)</span>
+              </li>
+            </ul>
+          </div>
           <DialogFooter>
              <DialogClose asChild>
               <Button type="button">Close</Button>
