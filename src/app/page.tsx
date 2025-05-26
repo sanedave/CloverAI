@@ -31,36 +31,11 @@ const MOCK_PARTICIPANTS: Participant[] = [
   MOCK_CURRENT_USER,
   { id: 'user_jane', name: 'Jane Doe', avatarUrl: 'https://placehold.co/100x100.png?a=2', status: 'online' },
   { id: 'user_john', name: 'John Smith', avatarUrl: 'https://placehold.co/100x100.png?a=3', status: 'offline' },
-  AI_ASSISTANT_PARTICIPANT, 
+  AI_ASSISTANT_PARTICIPANT,
 ];
 
-// Mock initial messages
-const MOCK_INITIAL_MESSAGES: Message[] = [
-  {
-    id: nanoid(),
-    text: 'Hey everyone! How is it going?',
-    timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-    sender: 'other',
-    userName: 'Jane Doe',
-    avatarUrl: 'https://placehold.co/100x100.png?a=2',
-  },
-  {
-    id: nanoid(),
-    text: "Hi Jane! Doing great, just setting up this new chat app. What do you think of the dark theme? ✨",
-    timestamp: new Date(Date.now() - 1000 * 60 * 3), // 3 minutes ago
-    sender: 'user',
-    userName: MOCK_CURRENT_USER.name,
-    avatarUrl: MOCK_CURRENT_USER.avatarUrl,
-  },
-  {
-    id: nanoid(),
-    text: "Looks sleek! Very modern. The purple accents are a nice touch. 💜",
-    timestamp: new Date(Date.now() - 1000 * 60 * 1), // 1 minute ago
-    sender: 'other',
-    userName: 'Jane Doe',
-    avatarUrl: 'https://placehold.co/100x100.png?a=2',
-  },
-];
+// Mock initial messages - Set to empty array
+const MOCK_INITIAL_MESSAGES: Message[] = [];
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -117,24 +92,8 @@ export default function ChatPage() {
           setMessages((prevMessages) => [...prevMessages, assistantErrorMessage]);
         });
     }
-
-    // Simulate a reply from another user after a short delay - REMOVED
-    // setTimeout(() => {
-    //   const otherParticipant = participants.find(p => p.id !== currentUser.id && p.name === 'Jane Doe'); // Find Jane
-    //   if (otherParticipant) {
-    //     const replyMessage: Message = {
-    //       id: nanoid(),
-    //       text: `Got it, "${text.substring(0, 20)}${text.length > 20 ? '...' : ''}"! 👍`,
-    //       timestamp: new Date(),
-    //       sender: 'other',
-    //       userName: otherParticipant.name,
-    //       avatarUrl: otherParticipant.avatarUrl,
-    //     };
-    //     setMessages((prevMessages) => [...prevMessages, replyMessage]);
-    //   }
-    // }, 2500); 
   };
-  
+
   if (isLoading) {
      return (
         <div className="flex h-screen items-center justify-center bg-background">
