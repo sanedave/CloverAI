@@ -49,12 +49,13 @@ export default function ChatPage() {
     setIsLoading(false);
   }, []);
 
-  const handleSendMessage = async (text: string) => {
+  const handleSendMessage = async (text: string, inputImageDataUri?: string) => {
     if (!currentUser || isAiResponding) return;
 
     const userMessage: Message = {
       id: nanoid(),
-      text,
+      text: text || undefined, // text can be empty if only image is sent
+      inputImageUrl: inputImageDataUri,
       timestamp: new Date(),
       sender: 'user',
       userName: currentUser.name,
@@ -81,18 +82,22 @@ export default function ChatPage() {
       setMessages((prevMessages) => [...prevMessages, tempThinkingMessage]);
 
       try {
-        const aiResponse: ChatAssistantOutput = await chatAssistant({ userInput: text } as ChatAssistantInput);
+        const aiInput: ChatAssistantInput = { userInput: text };
+        if (inputImageDataUri) {
+          aiInput.inputImageDataUri = inputImageDataUri;
+        }
+        const aiResponse: ChatAssistantOutput = await chatAssistant(aiInput);
         
         const assistantMessage: Message = {
           id: thinkingMessageId, // Use the same ID to update the thinking message
           text: aiResponse.assistantResponse,
-          imageUrl: aiResponse.imageUrl,
-          timestamp: new Date(), // Can update timestamp or keep original
+          imageUrl: aiResponse.imageUrl, // This is for AI-generated images
+          timestamp: new Date(), 
           sender: 'other',
           userName: aiParticipant.name,
           avatarUrl: aiParticipant.avatarUrl,
           dataAiHint: 'leaf logo',
-          isLoading: false, // Mark as not loading
+          isLoading: false, 
         };
         setMessages((prevMessages) =>
           prevMessages.map(msg => msg.id === thinkingMessageId ? assistantMessage : msg)
@@ -101,7 +106,7 @@ export default function ChatPage() {
       } catch (error) {
         console.error("AI Assistant Error:", error);
         const assistantErrorMessage: Message = {
-          id: thinkingMessageId, // Use same ID to update/replace thinking message
+          id: thinkingMessageId, 
           text: "Oops! The AI assistant is having a little trouble thinking right now.",
           timestamp: new Date(),
           sender: 'other',
@@ -117,7 +122,6 @@ export default function ChatPage() {
         setIsAiResponding(false);
       }
     } else {
-      // Should not happen if AI participant is always in MOCK_PARTICIPANTS
       setIsAiResponding(false); 
     }
   };
