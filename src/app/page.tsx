@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Message, Participant } from '@/types/chat';
 import { MessageList } from '@/components/chat/message-list';
 import { MessageInput } from '@/components/chat/message-input';
@@ -141,13 +141,16 @@ export default function ChatPage() {
     const userMessage: Message = {
       id: nanoid(),
       text: text || undefined,
-      inputImageUrls: inputImageDataUris,
+      inputImageUrls: inputImageDataUris, // Images explicitly uploaded by user for THIS turn
       timestamp: new Date(),
       sender: 'user',
       userName: currentUser.name,
       avatarUrl: currentUser.avatarUrl,
       dataAiHint: 'profile user',
     };
+    // Add user message to state immediately for responsiveness
+    // The `messages` state used below for `lastMessage` will be the state *before* this new message.
+    const currentMessagesBeforeUserMessage = messages; 
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     
     setIsAiResponding(true);
@@ -169,9 +172,24 @@ export default function ChatPage() {
 
       try {
         const aiInput: ChatAssistantInput = { userInput: text };
+        const lastMessageInChat = currentMessagesBeforeUserMessage.length > 0 ? currentMessagesBeforeUserMessage[currentMessagesBeforeUserMessage.length - 1] : null;
+
         if (inputImageDataUris && inputImageDataUris.length > 0) {
+          // User explicitly provided new images for this turn. Use them.
           aiInput.inputImageDataUris = inputImageDataUris;
+        } else if (
+          lastMessageInChat &&
+          lastMessageInChat.sender === 'other' && // Last message was from AI
+          lastMessageInChat.imageUrl &&           // and it was an image
+          text.trim().length > 0                  // and user typed some text (not just sending empty)
+                                                  // and user did not upload new images for this turn (checked by outer if)
+        ) {
+          // Assume the current user text refers to the last AI-generated image.
+          // Pass the AI's last generated image as context for this turn.
+          aiInput.inputImageDataUris = [lastMessageInChat.imageUrl];
         }
+        // If neither of the above, aiInput.inputImageDataUris remains undefined.
+        
         const aiResponse: ChatAssistantOutput = await chatAssistant(aiInput);
         
         const assistantMessage: Message = {
