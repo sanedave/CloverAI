@@ -28,7 +28,7 @@ export type ChatAssistantOutput = z.infer<typeof ChatAssistantOutputSchema>;
 // Schema for the prompt's internal decision-making
 const PromptDecisionSchema = z.object({
   action: z.enum(['generateText', 'generateImage']).describe("The action to take based on user input: 'generateText' for a textual response, or 'generateImage' to create an image."),
-  textResponse: z.string().optional().describe("The text response if action is 'generateText'. If action is 'generateImage', this can be a short confirmation message (e.g., 'Sure, generating an image of a cat...')."),
+  textResponse: z.string().optional().describe("The text response if action is 'generateText'. If action is 'generateImage', this should be 'Image generation'."),
   imageGenerationPrompt: z.string().optional().describe("The prompt for image generation if action is 'generateImage'. This should be the core subject/description for the image.")
 });
 
@@ -48,7 +48,7 @@ const assistantPrompt = ai.definePrompt({
 The user sent the following message: "{{{userInput}}}"
 
 Analyze the user's message carefully.
-- If the user is asking to generate an image, create a drawing, make a picture, or a similar request for visual content (e.g., "generate an image of a cat", "draw a sunset", "show me a picture of a dog", "can you make a picture of a spaceship?"), set 'action' to 'generateImage'. Extract the core subject for the image into 'imageGenerationPrompt'. For 'textResponse', provide a brief confirmation like "Okay, I'll generate an image of [subject]..." or "Sure, creating a picture of [subject] for you...".
+- If the user is asking to generate an image, create a drawing, make a picture, or a similar request for visual content (e.g., "generate an image of a cat", "draw a sunset", "show me a picture of a dog", "can you make a picture of a spaceship?"), set 'action' to 'generateImage'. Extract the core subject for the image into 'imageGenerationPrompt'. For 'textResponse', set it to "Image generation".
 - Otherwise, if the user's message is a question, a statement, or any other conversational input not requesting an image, set 'action' to 'generateText'. Formulate a helpful, concise, and natural text response in 'textResponse'.
 
 Your responses should be appropriate for a chat context.
@@ -81,7 +81,7 @@ const assistantFlow = ai.defineFlow(
         });
         if (media && media.url) {
           return {
-            assistantResponse: decisionOutput.textResponse || "Here's the image you requested!",
+            assistantResponse: decisionOutput.textResponse, // This will be "Image generation"
             imageUrl: media.url, // This will be a data URI
             isImageResponse: true,
           };

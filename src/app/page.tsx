@@ -21,7 +21,7 @@ const MOCK_CURRENT_USER: Participant = {
 const AI_ASSISTANT_PARTICIPANT: Participant = {
   id: 'user_ai_assistant',
   name: 'AI Assistant',
-  avatarUrl: 'https://placehold.co/100x100/4CAF50/FFFFFF.png', 
+  avatarUrl: 'https://placehold.co/100x100/4CAF50/FFFFFF.png',
   status: 'online',
   isCurrentUser: false,
 };
@@ -62,42 +62,63 @@ export default function ChatPage() {
       dataAiHint: 'profile user',
     };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
+    
     setIsAiResponding(true);
-
     const aiParticipant = participants.find(p => p.id === AI_ASSISTANT_PARTICIPANT.id);
+
     if (aiParticipant) {
+      const thinkingMessageId = nanoid();
+      const tempThinkingMessage: Message = {
+        id: thinkingMessageId,
+        text: '...', // Displayed by MessageItem during loading
+        timestamp: new Date(),
+        sender: 'other',
+        userName: aiParticipant.name,
+        avatarUrl: aiParticipant.avatarUrl,
+        dataAiHint: 'leaf logo',
+        isLoading: true,
+      };
+      setMessages((prevMessages) => [...prevMessages, tempThinkingMessage]);
+
       try {
         const aiResponse: ChatAssistantOutput = await chatAssistant({ userInput: text } as ChatAssistantInput);
         
         const assistantMessage: Message = {
-          id: nanoid(),
+          id: thinkingMessageId, // Use the same ID to update the thinking message
           text: aiResponse.assistantResponse,
           imageUrl: aiResponse.imageUrl,
-          timestamp: new Date(),
+          timestamp: new Date(), // Can update timestamp or keep original
           sender: 'other',
           userName: aiParticipant.name,
           avatarUrl: aiParticipant.avatarUrl,
           dataAiHint: 'leaf logo',
+          isLoading: false, // Mark as not loading
         };
-        setMessages((prevMessages) => [...prevMessages, assistantMessage]);
+        setMessages((prevMessages) =>
+          prevMessages.map(msg => msg.id === thinkingMessageId ? assistantMessage : msg)
+        );
 
       } catch (error) {
         console.error("AI Assistant Error:", error);
         const assistantErrorMessage: Message = {
-          id: nanoid(),
+          id: thinkingMessageId, // Use same ID to update/replace thinking message
           text: "Oops! The AI assistant is having a little trouble thinking right now.",
           timestamp: new Date(),
           sender: 'other',
           userName: aiParticipant.name, 
           avatarUrl: aiParticipant.avatarUrl, 
           dataAiHint: 'leaf logo',
+          isLoading: false,
         };
-        setMessages((prevMessages) => [...prevMessages, assistantErrorMessage]);
+        setMessages((prevMessages) =>
+          prevMessages.map(msg => msg.id === thinkingMessageId ? assistantErrorMessage : msg)
+        );
       } finally {
         setIsAiResponding(false);
       }
     } else {
-      setIsAiResponding(false); // Should not happen if AI participant is always in MOCK_PARTICIPANTS
+      // Should not happen if AI participant is always in MOCK_PARTICIPANTS
+      setIsAiResponding(false); 
     }
   };
 

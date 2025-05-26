@@ -8,6 +8,7 @@ export interface Message {
   userName: string;
   avatarUrl?: string;
   dataAiHint?: string;
+  isLoading?: boolean; // Added for AI thinking state
 }
 
 export interface Participant {
