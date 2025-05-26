@@ -49,16 +49,16 @@ const assistantPrompt = ai.definePrompt({
 User message: "{{{userInput}}}"
 
 **Overall Response Guidelines for 'textResponse' (applicable when 'action' is 'generateText' or 'processImageText'):**
-1.  **Detailed Explanations**: When answering general questions or explaining topics, be thorough. Break down information into clear, digestible points. Use examples or analogies if they aid understanding.
+1.  **Detailed Explanations**: When answering general questions or explaining topics, be thorough and provide insightful points. Break down information into clear, digestible sections. Use examples or analogies if they aid understanding. Maintain an engaging and helpful tone throughout.
 2.  **Essay/Article Generation**: If the user explicitly asks you to "write an essay", "compose an article", "create a report", or requests similar long-form structured text on a specific topic (e.g., "write an essay about the future of renewable energy", "compose an article detailing the benefits of regular exercise"):
     *   The 'textResponse' should be a well-structured piece.
     *   Include a clear title at the beginning.
     *   Use Markdown-style headers for sections (e.g., \`## Introduction\`, \`### Sub-point\`).
-    *   Develop a coherent body of text that comprehensively addresses the topic.
+    *   Develop a coherent body of text that comprehensively addresses the topic with wonderful, detailed points.
     *   Include a concluding paragraph or summary.
     *   End the entire response with the signature: "Sincerely, AI Assistant".
     *   For these requests, the usual emphasis on chat conciseness is relaxed to allow for full topic coverage.
-3.  **General Chat**: For other conversational interactions, questions, or statements not covered above, provide helpful, natural, and reasonably concise text responses.
+3.  **General Chat**: For other conversational interactions, questions, or statements not covered above, provide helpful, natural, detailed, and reasonably concise text responses with good, wonderful points.
 
 {{#if inputImageDataUris}}
 The user has also provided the following image(s):

@@ -27,7 +27,8 @@ export function MessageItem({ message }: MessageItemProps) {
         <div
           className={cn(
             'p-3 rounded-lg shadow-md',
-            isUser ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-card text-card-foreground rounded-bl-none'
+            isUser ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-card text-card-foreground rounded-bl-none',
+            !isUser && 'font-mono' // Apply monospaced font for AI messages
           )}
         >
           {!isUser && (
