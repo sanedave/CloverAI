@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { User, Image as ImageIcon, Download } from 'lucide-react';
-import NextImage from 'next/image'; // Use NextImage for consistency if desired, or img for data URIs
+// import NextImage from 'next/image'; // Use NextImage for consistency if desired, or img for data URIs
 
 interface MessageItemProps {
   message: Message;
@@ -34,16 +34,19 @@ export function MessageItem({ message }: MessageItemProps) {
             <p className="text-xs font-semibold text-muted-foreground mb-1">{message.userName}</p>
           )}
           
-          {/* Display user-uploaded image if present */}
-          {message.inputImageUrl && (
-            <div className="mb-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src={message.inputImageUrl} 
-                alt="User uploaded image" 
-                className="rounded-md max-w-full h-auto object-contain"
-                data-ai-hint="user uploaded"
-              />
+          {/* Display user-uploaded images if present */}
+          {message.inputImageUrls && message.inputImageUrls.length > 0 && (
+            <div className={cn("mb-2 grid gap-2", message.inputImageUrls.length > 1 ? "grid-cols-2" : "grid-cols-1")}>
+              {message.inputImageUrls.map((url, index) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img 
+                  key={index}
+                  src={url} 
+                  alt={`User uploaded image ${index + 1}`}
+                  className="rounded-md max-w-full h-auto object-contain"
+                  data-ai-hint="user uploaded"
+                />
+              ))}
             </div>
           )}
 
@@ -77,11 +80,11 @@ export function MessageItem({ message }: MessageItemProps) {
             </div>
           ) : message.text ? ( // Regular text message
             <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-          ) : !message.inputImageUrl ? ( // If no text, no AI image, and no user uploaded image
+          ) : !(message.inputImageUrls && message.inputImageUrls.length > 0) ? ( // If no text, no AI image, and no user uploaded image(s)
              <p className="text-sm text-muted-foreground italic flex items-center gap-1">
               <ImageIcon size={14} /> Empty message
             </p>
-          ) : null /* If only inputImageUrl, text can be empty, so render nothing extra here */ }
+          ) : null /* If only inputImageUrls, text can be empty, so render nothing extra here */ }
         </div>
         <p className="text-xs text-muted-foreground mt-1 px-1">
           {message.isLoading ? 'thinking...' : formatDistanceToNow(message.timestamp, { addSuffix: true })}

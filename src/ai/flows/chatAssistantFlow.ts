@@ -15,7 +15,7 @@ import {z} from 'genkit';
 
 const ChatAssistantInputSchema = z.object({
   userInput: z.string().describe('The message text from the user.'),
-  inputImageDataUri: z.string().optional().describe("An optional image provided by the user, as a data URI. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
+  inputImageDataUris: z.array(z.string()).optional().describe("Optional images provided by the user, as data URIs. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
 });
 export type ChatAssistantInput = z.infer<typeof ChatAssistantInputSchema>;
 
@@ -28,7 +28,7 @@ export type ChatAssistantOutput = z.infer<typeof ChatAssistantOutputSchema>;
 
 // Schema for the prompt's internal decision-making
 const PromptDecisionSchema = z.object({
-  action: z.enum(['generateText', 'generateImage', 'processImageText']).describe("The action to take: 'generateText' for a textual response, 'generateImage' to create/modify an image, 'processImageText' to describe or answer questions about a provided image."),
+  action: z.enum(['generateText', 'generateImage', 'processImageText']).describe("The action to take: 'generateText' for a textual response, 'generateImage' to create/modify an image, 'processImageText' to describe or answer questions about a provided image(s)."),
   textResponse: z.string().optional().describe("The text response if action is 'generateText' or 'processImageText'. If action is 'generateImage', this should be a status like 'Image generation' or 'Image modification'."),
   imageGenerationPrompt: z.string().optional().describe("The prompt for image generation/modification if action is 'generateImage'. This should be the core subject/description for the image or the modification instruction.")
 });
@@ -47,24 +47,28 @@ const assistantPrompt = ai.definePrompt({
   output: {schema: PromptDecisionSchema},
   prompt: `You are a friendly and helpful AI assistant named 'AI Assistant' in a chat application.
 User message: "{{{userInput}}}"
-{{#if inputImageDataUri}}
-The user has also provided this image: {{media url=inputImageDataUri}}
-Your task is to analyze the user's message, and the provided image if any, to determine the appropriate action.
+{{#if inputImageDataUris}}
+The user has also provided the following image(s):
+{{#each inputImageDataUris}}
+Image {{@index}}: {{media url=this}}
+{{/each}}
+
+Your task is to analyze the user's message, and the provided image(s), to determine the appropriate action.
 
 Consider the following scenarios:
 
-1.  **Image Generation (New or Based on Provided Image):**
-    *   If the user asks to generate a new image, create a drawing, make a picture, or a similar request for visual content (e.g., "generate an image of a cat", "draw a sunset"), AND no image was provided by the user OR they explicitly ask for a NEW image ignoring any provided one:
+1.  **Image Generation (New or Based on Provided Image(s)):**
+    *   If the user asks to generate a new image, create a drawing, make a picture, or a similar request for visual content (e.g., "generate an image of a cat", "draw a sunset"), AND no image was provided by the user OR they explicitly ask for a NEW image ignoring any provided one(s):
         Set 'action' to 'generateImage'. Extract the core subject for the image into 'imageGenerationPrompt'. For 'textResponse', set it to "Image generation".
-    *   If the user HAS PROVIDED an image AND their message asks to RE-GENERATE it, EDIT it, or MODIFY it (e.g., "re-generate this", "make this cat blue", "add a hat to this person", "change the background to a beach"):
-        Set 'action' to 'generateImage'. The 'imageGenerationPrompt' should be the user's textual instruction for the modification (e.g., "make this cat blue and add a hat"). For 'textResponse', set it to "Image modification". The provided image will be used as primary context.
+    *   If the user HAS PROVIDED image(s) AND their message asks to RE-GENERATE, EDIT, or MODIFY one or more of them (e.g., "re-generate this", "make the first cat blue", "add a hat to the person in the second image", "change the background of these images to a beach"):
+        Set 'action' to 'generateImage'. The 'imageGenerationPrompt' should be the user's textual instruction for the modification (e.g., "make the first cat blue and add a hat"). For 'textResponse', set it to "Image modification". The provided image(s) will be used as primary context. If multiple images are provided, assume the instruction applies to the first one unless specified otherwise, or try to combine them if the request implies it (e.g., "combine these into one scene").
 
-2.  **Image Understanding/Description (Text Response about Provided Image):**
-    *   If the user HAS PROVIDED an image AND asks a question about it, wants it described, or seeks information from it (e.g., "what is in this picture?", "describe this image", "can you identify this plant?"):
-        Set 'action' to 'processImageText'. Formulate a helpful text response answering the question or describing the image in 'textResponse'.
+2.  **Image Understanding/Description (Text Response about Provided Image(s)):**
+    *   If the user HAS PROVIDED image(s) AND asks a question about them, wants them described, or seeks information from them (e.g., "what is in these pictures?", "describe the images", "can you identify this plant?"):
+        Set 'action' to 'processImageText'. Formulate a helpful text response answering the question or describing the image(s) in 'textResponse'.
 
 3.  **General Text Conversation:**
-    *   If the user's message is a question, a statement, or any other conversational input not falling into the above image-related categories (even if an image was provided but the text doesn't refer to it for processing/generation):
+    *   If the user's message is a question, a statement, or any other conversational input not falling into the above image-related categories (even if image(s) were provided but the text doesn't refer to them for processing/generation):
         Set 'action' to 'generateText'. Formulate a helpful, concise, and natural text response in 'textResponse'.
 
 Your responses should be appropriate for a chat context.
@@ -98,19 +102,19 @@ const assistantFlow = ai.defineFlow(
     if (decisionOutput.action === 'generateImage' && decisionOutput.imageGenerationPrompt) {
       try {
         const generationPromptParts: any[] = [];
-        // If an input image is provided AND the intent is to modify/use it (implied by imageGenerationPrompt being about it)
-        // The LLM prompt logic above tries to guide this.
-        // For now, we assume if inputImageDataUri is present and action is 'generateImage', it's for modification/context.
-        if (input.inputImageDataUri) {
-          generationPromptParts.push({ media: { url: input.inputImageDataUri } });
+        
+        if (input.inputImageDataUris && input.inputImageDataUris.length > 0) {
+          input.inputImageDataUris.forEach(uri => {
+            generationPromptParts.push({ media: { url: uri } });
+          });
         }
         generationPromptParts.push({ text: decisionOutput.imageGenerationPrompt });
         
-        const modelToUse = input.inputImageDataUri ? 'googleai/gemini-2.0-flash-exp' : 'googleai/gemini-2.0-flash-exp'; // Same model, but shows intent
+        const modelToUse = 'googleai/gemini-2.0-flash-exp';
 
         const {media} = await ai.generate({
           model: modelToUse, 
-          prompt: generationPromptParts.length > 1 ? generationPromptParts : decisionOutput.imageGenerationPrompt, // Use array if image is included
+          prompt: generationPromptParts,
           config: {
             responseModalities: ['TEXT', 'IMAGE'], 
           },
@@ -118,7 +122,7 @@ const assistantFlow = ai.defineFlow(
 
         if (media && media.url) {
           return {
-            assistantResponse: decisionOutput.textResponse, // e.g., "Image generation" or "Image modification"
+            assistantResponse: decisionOutput.textResponse || "Image generation",
             imageUrl: media.url, 
             isImageResponse: true,
           };
@@ -130,12 +134,9 @@ const assistantFlow = ai.defineFlow(
         return { assistantResponse: "I ran into an issue trying to process that image request. Please try a different prompt.", isImageResponse: false };
       }
     } else if (decisionOutput.action === 'processImageText') {
-         // This case is for when the AI is supposed to describe or answer questions about an image.
-         // The text response is already in decisionOutput.textResponse from the LLM.
-         // No image is *generated* by the assistant in this case.
         return {
-            assistantResponse: decisionOutput.textResponse || "I've processed the image you sent. What would you like to know?",
-            isImageResponse: false, // No new image is generated by the AI here
+            assistantResponse: decisionOutput.textResponse || "I've processed the image(s) you sent. What would you like to know?",
+            isImageResponse: false, 
         };
     }
     else { // 'generateText' or fallback

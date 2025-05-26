@@ -21,7 +21,7 @@ const MOCK_CURRENT_USER: Participant = {
 const AI_ASSISTANT_PARTICIPANT: Participant = {
   id: 'user_ai_assistant',
   name: 'AI Assistant',
-  avatarUrl: 'https://placehold.co/100x100/4CAF50/FFFFFF.png',
+  avatarUrl: 'https://placehold.co/100x100/4CAF50/FFFFFF.png', // Green placeholder
   status: 'online',
   isCurrentUser: false,
 };
@@ -49,13 +49,13 @@ export default function ChatPage() {
     setIsLoading(false);
   }, []);
 
-  const handleSendMessage = async (text: string, inputImageDataUri?: string) => {
+  const handleSendMessage = async (text: string, inputImageDataUris?: string[]) => {
     if (!currentUser || isAiResponding) return;
 
     const userMessage: Message = {
       id: nanoid(),
       text: text || undefined, // text can be empty if only image is sent
-      inputImageUrl: inputImageDataUri,
+      inputImageUrls: inputImageDataUris,
       timestamp: new Date(),
       sender: 'user',
       userName: currentUser.name,
@@ -83,8 +83,8 @@ export default function ChatPage() {
 
       try {
         const aiInput: ChatAssistantInput = { userInput: text };
-        if (inputImageDataUri) {
-          aiInput.inputImageDataUri = inputImageDataUri;
+        if (inputImageDataUris && inputImageDataUris.length > 0) {
+          aiInput.inputImageDataUris = inputImageDataUris;
         }
         const aiResponse: ChatAssistantOutput = await chatAssistant(aiInput);
         
