@@ -12,11 +12,6 @@ interface MessageItemProps {
 export function MessageItem({ message }: MessageItemProps) {
   const isUser = message.sender === 'user';
 
-  // If message is loading, text is "..."
-  // Normal rendering handles this, as imageUrl will be undefined for the loading message.
-  // No special block for message.isLoading is strictly needed here if text is "..."
-  // and imageUrl is undefined during loading.
-
   return (
     <div className={cn('flex items-start gap-3 my-4', isUser ? 'justify-end' : 'justify-start')}>
       {!isUser && (
@@ -37,7 +32,15 @@ export function MessageItem({ message }: MessageItemProps) {
           {!isUser && (
             <p className="text-xs font-semibold text-muted-foreground mb-1">{message.userName}</p>
           )}
-          {message.imageUrl && !message.isLoading ? (
+          {message.isLoading ? (
+            <div className="flex items-center justify-center py-2"> {/* Added py-2 for some vertical space */}
+              <div className="flex space-x-1.5">
+                <span className="dot-style animate-dot-hover1"></span>
+                <span className="dot-style animate-dot-hover2"></span>
+                <span className="dot-style animate-dot-hover3"></span>
+              </div>
+            </div>
+          ) : message.imageUrl ? (
             <div className="relative group">
               {message.text && <p className="text-sm whitespace-pre-wrap mb-2">{message.text}</p>}
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -57,11 +60,11 @@ export function MessageItem({ message }: MessageItemProps) {
                 <Download className="h-4 w-4" />
               </a>
             </div>
-          ) : message.text ? ( // This will render "..." if message.isLoading is true and text is "..."
+          ) : message.text ? (
             <p className="text-sm whitespace-pre-wrap">{message.text}</p>
           ) : (
             // Only show "Empty message" if not loading and no text/image
-            !message.isLoading && <p className="text-sm text-muted-foreground italic flex items-center gap-1">
+             <p className="text-sm text-muted-foreground italic flex items-center gap-1">
               <ImageIcon size={14} /> Empty message
             </p>
           )}

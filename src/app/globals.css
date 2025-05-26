@@ -86,3 +86,41 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Added for thinking dots animation */
+@keyframes dot-hover-animation {
+  0%, 100% {
+    transform: translateY(0px);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.dot-style {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor; /* Uses parent's text color */
+}
+
+.animate-dot-hover1 {
+  /* Ensure .dot-style is also applied in HTML */
+  animation: dot-hover-animation 1.4s infinite ease-in-out;
+  animation-delay: 0s;
+}
+
+.animate-dot-hover2 {
+  /* Ensure .dot-style is also applied in HTML */
+  animation: dot-hover-animation 1.4s infinite ease-in-out;
+  animation-delay: 0.2s;
+}
+
+.animate-dot-hover3 {
+  /* Ensure .dot-style is also applied in HTML */
+  animation: dot-hover-animation 1.4s infinite ease-in-out;
+  animation-delay: 0.4s;
+}
