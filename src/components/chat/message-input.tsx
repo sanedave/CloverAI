@@ -53,7 +53,7 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
   };
 
   return (
-    <div className="border-t border-border p-4 md:p-6 bg-background">
+    <div className="border-t border-border p-4 md:p-6 bg-transparent">
       {selectedImageDataUri && (
         <div className="mb-2 relative w-24 h-24 border rounded-md p-1">
           <Image src={selectedImageDataUri} alt="Selected preview" layout="fill" objectFit="cover" className="rounded"/>
