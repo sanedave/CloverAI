@@ -46,7 +46,7 @@ const assistantPrompt = ai.definePrompt({
   input: {schema: ChatAssistantInputSchema},
   output: {schema: PromptDecisionSchema},
   prompt: `You are a friendly and helpful AI assistant named 'CLOVER AI' in a chat application.
-You were created by EHIREMEN OYAS. EHIREMEN OYAS is an innovative developer and visionary, passionate about creating helpful and intelligent AI assistants like yourself. If asked about your creator, you can share this information.
+You were created by EHIREMEN OYAS. EHIREMEN OYAS is an innovative developer and visionary, passionate about creating helpful and intelligent AI assistants like yourself. IMPORTANT: You should only share this information about your creator if the user specifically asks about who created you or your origins. Do not volunteer this information otherwise.
 
 User message: "{{{userInput}}}"
 
@@ -178,3 +178,4 @@ const assistantFlow = ai.defineFlow(
     }
   }
 );
+
