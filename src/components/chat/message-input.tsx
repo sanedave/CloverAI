@@ -4,8 +4,9 @@
 import { useState, type FormEvent, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Paperclip, XCircle } from 'lucide-react';
+import { Send, Paperclip, XCircle, Camera as CameraIcon } from 'lucide-react';
 import Image from 'next/image'; // For previewing image
+import { CameraCaptureModal } from '@/components/camera/camera-capture-modal';
 
 interface MessageInputProps {
   onSendMessage: (text: string, imageDataUri?: string) => void;
@@ -15,6 +16,7 @@ interface MessageInputProps {
 export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
   const [messageText, setMessageText] = useState('');
   const [selectedImageDataUri, setSelectedImageDataUri] = useState<string | null>(null);
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,6 +45,11 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
       setMessageText('');
       setSelectedImageDataUri(null);
     }
+  };
+
+  const handlePhotoCaptured = (imageDataUri: string) => {
+    setSelectedImageDataUri(imageDataUri);
+    setIsCameraModalOpen(false);
   };
 
   return (
@@ -81,6 +88,17 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
             className="hidden"
             disabled={disabled}
         />
+        <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="rounded-full hover:bg-accent/50"
+            onClick={() => setIsCameraModalOpen(true)}
+            disabled={disabled}
+            aria-label="Open camera"
+        >
+            <CameraIcon className="h-5 w-5 text-muted-foreground"/>
+        </Button>
         <Input
           type="text"
           placeholder="Type a message or describe image..."
@@ -100,6 +118,11 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
           <Send className="h-5 w-5 text-primary-foreground" />
         </Button>
       </form>
+      <CameraCaptureModal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        onPhotoCaptured={handlePhotoCaptured}
+      />
     </div>
   );
 }
