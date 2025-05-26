@@ -1,12 +1,12 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import type { Message, Participant } from '@/types/chat';
 import { MessageList } from '@/components/chat/message-list';
 import { MessageInput } from '@/components/chat/message-input';
-// ParticipantsPanel import is no longer needed if the panel is removed
-// import { ParticipantsPanel } from '@/components/chat/participants-panel';
 import { nanoid } from 'nanoid'; // For generating unique IDs
+import { chatAssistant, type ChatAssistantInput } from '@/ai/flows/chatAssistantFlow'; // Added import
 
 // Mock current user
 const MOCK_CURRENT_USER: Participant = {
@@ -17,11 +17,21 @@ const MOCK_CURRENT_USER: Participant = {
   status: 'online'
 };
 
+// AI Assistant Participant
+const AI_ASSISTANT_PARTICIPANT: Participant = {
+  id: 'user_ai_assistant',
+  name: 'AI Assistant',
+  avatarUrl: 'https://placehold.co/100x100.png?t=ai_assistant',
+  status: 'online',
+  isCurrentUser: false,
+};
+
 // Mock other participants
 const MOCK_PARTICIPANTS: Participant[] = [
   MOCK_CURRENT_USER,
   { id: 'user_jane', name: 'Jane Doe', avatarUrl: 'https://placehold.co/100x100.png?a=2', status: 'online' },
   { id: 'user_john', name: 'John Smith', avatarUrl: 'https://placehold.co/100x100.png?a=3', status: 'offline' },
+  AI_ASSISTANT_PARTICIPANT, // Added AI assistant to participants
 ];
 
 // Mock initial messages
@@ -79,6 +89,35 @@ export default function ChatPage() {
     };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
 
+    // Trigger AI Assistant response
+    const aiParticipant = participants.find(p => p.id === AI_ASSISTANT_PARTICIPANT.id);
+    if (aiParticipant) {
+      chatAssistant({ userInput: text } as ChatAssistantInput)
+        .then(aiResponse => {
+          const assistantMessage: Message = {
+            id: nanoid(),
+            text: aiResponse.assistantResponse,
+            timestamp: new Date(),
+            sender: 'other',
+            userName: aiParticipant.name,
+            avatarUrl: aiParticipant.avatarUrl,
+          };
+          setMessages((prevMessages) => [...prevMessages, assistantMessage]);
+        })
+        .catch(error => {
+          console.error("AI Assistant Error:", error);
+          const assistantErrorMessage: Message = {
+            id: nanoid(),
+            text: "Oops! The AI assistant is having a little trouble thinking right now.",
+            timestamp: new Date(),
+            sender: 'other',
+            userName: aiParticipant.name,
+            avatarUrl: aiParticipant.avatarUrl,
+          };
+          setMessages((prevMessages) => [...prevMessages, assistantErrorMessage]);
+        });
+    }
+
     // Simulate a reply from another user after a short delay
     setTimeout(() => {
       const otherParticipant = participants.find(p => p.id !== currentUser.id && p.name === 'Jane Doe'); // Find Jane
@@ -93,7 +132,7 @@ export default function ChatPage() {
         };
         setMessages((prevMessages) => [...prevMessages, replyMessage]);
       }
-    }, 1500);
+    }, 2500); // Increased delay for Jane's reply
   };
   
   if (isLoading) {
@@ -111,13 +150,6 @@ export default function ChatPage() {
         <MessageList messages={messages} />
         <MessageInput onSendMessage={handleSendMessage} />
       </main>
-
-      {/* Participants Panel has been removed */}
-      {/* 
-      <aside className="hidden md:flex md:w-80 lg:w-96 border-l border-border bg-card">
-        <ParticipantsPanel participants={participants} currentUser={currentUser} />
-      </aside>
-      */}
     </div>
   );
 }
