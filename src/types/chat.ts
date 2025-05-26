@@ -1,12 +1,13 @@
 
 export interface Message {
   id: string;
-  text: string;
+  text?: string; // Text is now optional
+  imageUrl?: string; // Optional field for image URLs (data URI)
   timestamp: Date;
   sender: 'user' | 'other';
   userName: string;
   avatarUrl?: string;
-  dataAiHint?: string; // Added for specific AI hints on avatars
+  dataAiHint?: string;
 }
 
 export interface Participant {
@@ -14,5 +15,5 @@ export interface Participant {
   name: string;
   avatarUrl?: string;
   isCurrentUser?: boolean;
-  status?: 'online' | 'offline'; // Optional: for future presence indication
+  status?: 'online' | 'offline';
 }
