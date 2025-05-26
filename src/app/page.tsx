@@ -6,7 +6,7 @@ import type { Message, Participant } from '@/types/chat';
 import { MessageList } from '@/components/chat/message-list';
 import { MessageInput } from '@/components/chat/message-input';
 import { nanoid } from 'nanoid'; // For generating unique IDs
-import { chatAssistant, type ChatAssistantInput } from '@/ai/flows/chatAssistantFlow'; // Added import
+import { chatAssistant, type ChatAssistantInput } from '@/ai/flows/chatAssistantFlow';
 
 // Mock current user
 const MOCK_CURRENT_USER: Participant = {
@@ -31,7 +31,7 @@ const MOCK_PARTICIPANTS: Participant[] = [
   MOCK_CURRENT_USER,
   { id: 'user_jane', name: 'Jane Doe', avatarUrl: 'https://placehold.co/100x100.png?a=2', status: 'online' },
   { id: 'user_john', name: 'John Smith', avatarUrl: 'https://placehold.co/100x100.png?a=3', status: 'offline' },
-  AI_ASSISTANT_PARTICIPANT, // Added AI assistant to participants
+  AI_ASSISTANT_PARTICIPANT, 
 ];
 
 // Mock initial messages
@@ -111,28 +111,28 @@ export default function ChatPage() {
             text: "Oops! The AI assistant is having a little trouble thinking right now.",
             timestamp: new Date(),
             sender: 'other',
-            userName: aiParticipant.name,
-            avatarUrl: aiParticipant.avatarUrl,
+            userName: aiParticipant.name, // Use AI participant's name
+            avatarUrl: aiParticipant.avatarUrl, // Use AI participant's avatar
           };
           setMessages((prevMessages) => [...prevMessages, assistantErrorMessage]);
         });
     }
 
-    // Simulate a reply from another user after a short delay
-    setTimeout(() => {
-      const otherParticipant = participants.find(p => p.id !== currentUser.id && p.name === 'Jane Doe'); // Find Jane
-      if (otherParticipant) {
-        const replyMessage: Message = {
-          id: nanoid(),
-          text: `Got it, "${text.substring(0, 20)}${text.length > 20 ? '...' : ''}"! 👍`,
-          timestamp: new Date(),
-          sender: 'other',
-          userName: otherParticipant.name,
-          avatarUrl: otherParticipant.avatarUrl,
-        };
-        setMessages((prevMessages) => [...prevMessages, replyMessage]);
-      }
-    }, 2500); // Increased delay for Jane's reply
+    // Simulate a reply from another user after a short delay - REMOVED
+    // setTimeout(() => {
+    //   const otherParticipant = participants.find(p => p.id !== currentUser.id && p.name === 'Jane Doe'); // Find Jane
+    //   if (otherParticipant) {
+    //     const replyMessage: Message = {
+    //       id: nanoid(),
+    //       text: `Got it, "${text.substring(0, 20)}${text.length > 20 ? '...' : ''}"! 👍`,
+    //       timestamp: new Date(),
+    //       sender: 'other',
+    //       userName: otherParticipant.name,
+    //       avatarUrl: otherParticipant.avatarUrl,
+    //     };
+    //     setMessages((prevMessages) => [...prevMessages, replyMessage]);
+    //   }
+    // }, 2500); 
   };
   
   if (isLoading) {
