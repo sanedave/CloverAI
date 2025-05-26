@@ -1,3 +1,4 @@
+
 import type { Message } from '@/types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -15,7 +16,7 @@ export function MessageItem({ message }: MessageItemProps) {
     <div className={cn('flex items-start gap-3 my-4', isUser ? 'justify-end' : 'justify-start')}>
       {!isUser && (
         <Avatar className="h-8 w-8">
-          <AvatarImage src={message.avatarUrl} alt={message.userName} data-ai-hint="profile person" />
+          <AvatarImage src={message.avatarUrl} alt={message.userName} data-ai-hint={message.dataAiHint || 'avatar'} />
           <AvatarFallback>
             <User className="h-4 w-4" />
           </AvatarFallback>
@@ -39,7 +40,7 @@ export function MessageItem({ message }: MessageItemProps) {
       </div>
       {isUser && (
         <Avatar className="h-8 w-8">
-          <AvatarImage src={message.avatarUrl} alt={message.userName} data-ai-hint="profile person" />
+          <AvatarImage src={message.avatarUrl} alt={message.userName} data-ai-hint={message.dataAiHint || 'avatar'} />
           <AvatarFallback>
             <User className="h-4 w-4" />
           </AvatarFallback>
