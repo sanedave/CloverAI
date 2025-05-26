@@ -3,8 +3,9 @@ import type { Message } from '@/types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
-import { User, Image as ImageIcon, Download } from 'lucide-react';
-// import NextImage from 'next/image'; // Use NextImage for consistency if desired, or img for data URIs
+import { User, Image as ImageIcon, Download, Volume2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import React from 'react';
 
 interface MessageItemProps {
   message: Message;
@@ -12,6 +13,25 @@ interface MessageItemProps {
 
 export function MessageItem({ message }: MessageItemProps) {
   const isUser = message.sender === 'user';
+  const { toast } = useToast();
+
+  const handleSpeak = (textToSpeak: string) => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel(); // Stop any currently playing speech
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'en-US'; // Set language for better voice selection
+      // You could experiment with setting specific voices if needed:
+      // const voices = window.speechSynthesis.getVoices();
+      // utterance.voice = voices.find(voice => voice.name === 'Your Preferred Voice');
+      window.speechSynthesis.speak(utterance);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Unsupported Feature',
+        description: 'Text-to-speech is not supported by your browser.',
+      });
+    }
+  };
 
   return (
     <div className={cn('flex items-start gap-3 my-4', isUser ? 'justify-end' : 'justify-start')}>
@@ -37,14 +57,14 @@ export function MessageItem({ message }: MessageItemProps) {
           
           {/* Display user-uploaded images if present */}
           {message.inputImageUrls && message.inputImageUrls.length > 0 && (
-            <div className={cn("mb-2 grid gap-2", message.inputImageUrls.length > 1 ? "grid-cols-2" : "grid-cols-1")}>
+            <div className={cn("mb-2 grid gap-2", message.inputImageUrls.length > 1 ? "grid-cols-2 md:grid-cols-3" : "grid-cols-1")}>
               {message.inputImageUrls.map((url, index) => (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img 
                   key={index}
                   src={url} 
                   alt={`User uploaded image ${index + 1}`}
-                  className="rounded-md max-w-full h-auto object-contain"
+                  className="rounded-md max-w-full h-auto object-contain aspect-square"
                   data-ai-hint="user uploaded"
                 />
               ))}
@@ -61,7 +81,21 @@ export function MessageItem({ message }: MessageItemProps) {
             </div>
           ) : message.imageUrl ? ( // AI-generated image
             <div className="relative group">
-              {message.text && <p className="text-sm whitespace-pre-wrap mb-2">{message.text}</p>}
+              {message.text && (
+                <div className="flex items-start gap-2 mb-2">
+                  <p className="text-sm whitespace-pre-wrap flex-grow">{message.text}</p>
+                  {!isUser && (
+                     <button
+                        onClick={() => handleSpeak(message.text!)}
+                        className="p-1 text-card-foreground/70 hover:text-card-foreground transition-colors shrink-0"
+                        title="Read aloud"
+                        aria-label="Read aloud"
+                      >
+                        <Volume2 size={16} />
+                      </button>
+                  )}
+                </div>
+              )}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src={message.imageUrl} 
@@ -71,7 +105,7 @@ export function MessageItem({ message }: MessageItemProps) {
               />
               <a
                 href={message.imageUrl}
-                download={`darkchat_image_${message.id}.png`}
+                download={`clover_ai_image_${message.id}.png`}
                 className="absolute bottom-2 right-2 bg-background/70 p-1.5 rounded-full text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/90"
                 title="Download image"
                 aria-label="Download image"
@@ -79,8 +113,20 @@ export function MessageItem({ message }: MessageItemProps) {
                 <Download className="h-4 w-4" />
               </a>
             </div>
-          ) : message.text ? ( // Regular text message
-            <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+          ) : message.text ? ( // Regular text message (AI or User)
+             <div className="flex items-start gap-2">
+                <p className="text-sm whitespace-pre-wrap flex-grow">{message.text}</p>
+                {!isUser && ( // TTS button only for AI messages
+                  <button
+                    onClick={() => handleSpeak(message.text!)}
+                     className="p-1 text-card-foreground/70 hover:text-card-foreground transition-colors shrink-0"
+                    title="Read aloud"
+                    aria-label="Read aloud"
+                  >
+                    <Volume2 size={16} />
+                  </button>
+                )}
+              </div>
           ) : !(message.inputImageUrls && message.inputImageUrls.length > 0) ? ( // If no text, no AI image, and no user uploaded image(s)
              <p className="text-sm text-muted-foreground italic flex items-center gap-1">
               <ImageIcon size={14} /> Empty message
