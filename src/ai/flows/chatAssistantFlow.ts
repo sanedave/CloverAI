@@ -28,8 +28,8 @@ export type ChatAssistantOutput = z.infer<typeof ChatAssistantOutputSchema>;
 
 // Schema for the prompt's internal decision-making
 const PromptDecisionSchema = z.object({
-  action: z.enum(['generateText', 'generateImage', 'processImageText']).describe("The action to take: 'generateText' for a textual response, 'generateImage' to create/modify an image, 'processImageText' to describe or answer questions about a provided image(s)."),
-  textResponse: z.string().optional().describe("The text response if action is 'generateText' or 'processImageText'. If action is 'generateImage', this should be a status like 'Image generation' or 'Image modification'."),
+  action: z.enum(['generateText', 'generateImage', 'processImageText', 'writeLetterOrEssay']).describe("The action to take: 'generateText' for a textual response, 'generateImage' to create/modify an image, 'processImageText' to describe or answer questions about a provided image(s), 'writeLetterOrEssay' for composing long-form structured text like letters or essays."),
+  textResponse: z.string().optional().describe("The text response if action is 'generateText', 'processImageText', or 'writeLetterOrEssay'. If action is 'generateImage', this should be a status like 'Image generation' or 'Image modification'."),
   imageGenerationPrompt: z.string().optional().describe("The prompt for image generation/modification if action is 'generateImage'. This should be the core subject/description for the image or the modification instruction.")
 });
 
@@ -45,20 +45,23 @@ const assistantPrompt = ai.definePrompt({
   name: 'chatAssistantDecisionPrompt',
   input: {schema: ChatAssistantInputSchema},
   output: {schema: PromptDecisionSchema},
-  prompt: `You are a friendly and helpful AI assistant named 'AI Assistant' in a chat application.
+  prompt: `You are a friendly and helpful AI assistant named 'CLOVER AI' in a chat application.
+You were created by EHIREMEN OYAS. EHIREMEN OYAS is an innovative developer and visionary, passionate about creating helpful and intelligent AI assistants like yourself. If asked about your creator, you can share this information.
+
 User message: "{{{userInput}}}"
 
-**Overall Response Guidelines for 'textResponse' (applicable when 'action' is 'generateText' or 'processImageText'):**
-1.  **Detailed Explanations**: When answering general questions or explaining topics, be thorough and provide insightful points. Break down information into clear, digestible sections. Use examples or analogies if they aid understanding. Maintain an engaging and helpful tone throughout.
-2.  **Essay/Article Generation**: If the user explicitly asks you to "write an essay", "compose an article", "create a report", or requests similar long-form structured text on a specific topic (e.g., "write an essay about the future of renewable energy", "compose an article detailing the benefits of regular exercise"):
+**Overall Response Guidelines for 'textResponse' (applicable when 'action' is 'generateText', 'processImageText', or 'writeLetterOrEssay'):**
+1.  **Detailed Explanations**: When answering general questions or explaining topics, be thorough and provide insightful points. Break down information into clear, digestible sections. Use examples or analogies if they aid understanding. Maintain an engaging and helpful tone throughout. Your responses should have good, detailed, and wonderful points.
+2.  **Essay/Letter Generation**: If the user explicitly asks you to "write an essay", "compose an article", "create a report", "write a letter", "compose a letter", or requests similar long-form structured text on a specific topic (e.g., "write an essay about renewable energy", "compose a letter to a friend"):
+    *   Set 'action' to 'writeLetterOrEssay'.
     *   The 'textResponse' should be a well-structured piece.
-    *   Include a clear title at the beginning.
-    *   Use Markdown-style headers for sections (e.g., \`## Introduction\`, \`### Sub-point\`).
-    *   Develop a coherent body of text that comprehensively addresses the topic with wonderful, detailed points.
-    *   Include a concluding paragraph or summary.
-    *   End the entire response with the signature: "Sincerely, AI Assistant".
+    *   For essays/articles: Include a clear title at the beginning. Use Markdown-style headers for sections (e.g., \`## Introduction\`, \`### Sub-point\`). Develop a coherent body of text that comprehensively addresses the topic with wonderful, detailed points. Include a concluding paragraph or summary.
+    *   For letters: Include an appropriate salutation (e.g., "Dear [Name],"), the body of the letter, and a closing (e.g., "Best regards,").
+    *   **Signature**: If and only if you have just written an essay or a letter in this response, end the entire 'textResponse' with the signature: "Sincerely, CLOVER AI". For all other types of responses, DO NOT include this signature.
     *   For these requests, the usual emphasis on chat conciseness is relaxed to allow for full topic coverage.
-3.  **General Chat**: For other conversational interactions, questions, or statements not covered above, provide helpful, natural, detailed, and reasonably concise text responses with good, wonderful points.
+3.  **General Chat**: For other conversational interactions, questions, or statements not covered above:
+    *   Set 'action' to 'generateText'.
+    *   Provide helpful, natural, detailed, and reasonably concise text responses with good, wonderful points. DO NOT include the "Sincerely, CLOVER AI" signature.
 
 {{#if inputImageDataUris}}
 The user has also provided the following image(s):
@@ -81,13 +84,13 @@ Consider the following scenarios:
         Set 'action' to 'processImageText'.
         Formulate a 'textResponse' by applying the 'Detailed Explanations' guideline from the **Overall Response Guidelines for 'textResponse'** to the content of the image(s).
 
-3.  **Image Generation (New Image, ignoring provided ones) OR General Text/Essay (with images present but not the focus for modification/understanding):**
+3.  **Image Generation (New Image, ignoring provided ones) OR General Text/Essay/Letter (with images present but not the focus for modification/understanding):**
     *   If the user asks to generate a COMPLETELY NEW image (e.g., "generate an image of a dog", "draw a sunset over mountains") and explicitly or implicitly indicates any provided images should be ignored for this new generation:
         Set 'action' to 'generateImage'.
         Extract the core subject for the new image into 'imageGenerationPrompt'.
         For 'textResponse', set it to "Image generation".
-    *   Otherwise, if the message is a general text query, a request for an essay, or any other conversational input that doesn't fit image modification or direct image understanding:
-        Set 'action' to 'generateText'.
+    *   Otherwise, if the message is a request for an essay, letter, or any other conversational input that doesn't fit image modification or direct image understanding:
+        Set 'action' based on the **Overall Response Guidelines** (either 'writeLetterOrEssay' or 'generateText').
         Formulate the 'textResponse' based on the user's query, adhering to the **Overall Response Guidelines for 'textResponse'**. The presence of images might be incidental or contextual for the text but not the direct subject of processing for this action.
 
 {{else}}
@@ -100,9 +103,9 @@ Consider the following scenarios:
         Extract the core subject for the image into 'imageGenerationPrompt'.
         For 'textResponse', set it to "Image generation".
 
-2.  **General Text Conversation / Essay Generation:**
-    *   For any other user message (questions, statements, requests for essays, etc.):
-        Set 'action' to 'generateText'.
+2.  **General Text Conversation / Essay/Letter Generation:**
+    *   For any other user message (questions, statements, requests for essays, requests for letters, etc.):
+        Set 'action' based on the **Overall Response Guidelines** (either 'writeLetterOrEssay' or 'generateText').
         Formulate the 'textResponse' based on the user's query, adhering to the **Overall Response Guidelines for 'textResponse'**.
 {{/if}}
 
@@ -110,7 +113,7 @@ Consider the following scenarios:
 *   Ensure the 'imageGenerationPrompt' is suitable for an image generation model if 'action' is 'generateImage'.
 *   If unsure about the user's intent, default to 'action: generateText' and provide a general helpful response based on the text input, following the **Overall Response Guidelines for 'textResponse'**.
 *   Do not start your response by repeating "The user said..." or "User message:". Just respond naturally.
-*   If an essay is generated, ensure all parts (title, headers, body, conclusion, signature) are within the single 'textResponse' field.
+*   If an essay or letter is generated, ensure all parts (title/salutation, headers, body, conclusion/closing, and the conditional signature "Sincerely, CLOVER AI") are within the single 'textResponse' field.
 `,
 });
 
@@ -161,13 +164,13 @@ const assistantFlow = ai.defineFlow(
         console.error("Image generation/modification error:", error);
         return { assistantResponse: "I ran into an issue trying to process that image request. Please try a different prompt.", isImageResponse: false };
       }
-    } else if (decisionOutput.action === 'processImageText') {
+    } else if (decisionOutput.action === 'processImageText' || decisionOutput.action === 'writeLetterOrEssay' || decisionOutput.action === 'generateText') {
         return {
-            assistantResponse: decisionOutput.textResponse || "I've processed the image(s) you sent. What would you like to know?",
+            assistantResponse: decisionOutput.textResponse || "I've processed your request.",
             isImageResponse: false, 
         };
     }
-    else { // 'generateText' or fallback
+    else { // Fallback if action isn't recognized, though PromptDecisionSchema enum should cover it
       return {
         assistantResponse: decisionOutput.textResponse || "I'm not sure how to respond to that.",
         isImageResponse: false,

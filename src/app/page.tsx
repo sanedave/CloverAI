@@ -20,7 +20,7 @@ const MOCK_CURRENT_USER: Participant = {
 // AI Assistant Participant
 const AI_ASSISTANT_PARTICIPANT: Participant = {
   id: 'user_ai_assistant',
-  name: 'AI Assistant',
+  name: 'CLOVER AI', // Updated Name
   avatarUrl: 'https://placehold.co/100x100/4CAF50/FFFFFF.png', // Green placeholder
   status: 'online',
   isCurrentUser: false,
@@ -54,7 +54,7 @@ export default function ChatPage() {
 
     const userMessage: Message = {
       id: nanoid(),
-      text: text || undefined, // text can be empty if only image is sent
+      text: text || undefined,
       inputImageUrls: inputImageDataUris,
       timestamp: new Date(),
       sender: 'user',
@@ -71,7 +71,7 @@ export default function ChatPage() {
       const thinkingMessageId = nanoid();
       const tempThinkingMessage: Message = {
         id: thinkingMessageId,
-        text: '...', // Displayed by MessageItem during loading
+        text: '...', 
         timestamp: new Date(),
         sender: 'other',
         userName: aiParticipant.name,
@@ -89,9 +89,9 @@ export default function ChatPage() {
         const aiResponse: ChatAssistantOutput = await chatAssistant(aiInput);
         
         const assistantMessage: Message = {
-          id: thinkingMessageId, // Use the same ID to update the thinking message
+          id: thinkingMessageId, 
           text: aiResponse.assistantResponse,
-          imageUrl: aiResponse.imageUrl, // This is for AI-generated images
+          imageUrl: aiResponse.imageUrl,
           timestamp: new Date(), 
           sender: 'other',
           userName: aiParticipant.name,
@@ -107,7 +107,7 @@ export default function ChatPage() {
         console.error("AI Assistant Error:", error);
         const assistantErrorMessage: Message = {
           id: thinkingMessageId, 
-          text: "Oops! The AI assistant is having a little trouble thinking right now.",
+          text: "Oops! CLOVER AI is having a little trouble thinking right now.",
           timestamp: new Date(),
           sender: 'other',
           userName: aiParticipant.name, 
