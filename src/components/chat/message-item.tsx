@@ -9,19 +9,18 @@ import React, { useState, useRef, useEffect } from 'react';
 
 interface MessageItemProps {
   message: Message;
+  selectedVoiceName?: string; // Added prop
 }
 
-export function MessageItem({ message }: MessageItemProps) {
+export function MessageItem({ message, selectedVoiceName }: MessageItemProps) {
   const isUser = message.sender === 'user';
   const { toast } = useToast();
   const [isSpeakingThisMessage, setIsSpeakingThisMessage] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Effect to cancel speech if component unmounts while speaking
   useEffect(() => {
     return () => {
-      // If this item was speaking and is unmounted, stop its speech.
-      if (isSpeakingThisMessage && utteranceRef.current) {
+      if (isSpeakingThisMessage && utteranceRef.current && typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
     };
@@ -30,33 +29,40 @@ export function MessageItem({ message }: MessageItemProps) {
   const handleSpeak = (textToSpeak: string) => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       if (isSpeakingThisMessage) {
-        // If this item is currently speaking, stop it.
-        window.speechSynthesis.cancel(); // Stops all speech, including this one.
+        window.speechSynthesis.cancel();
         setIsSpeakingThisMessage(false);
-        if (utteranceRef.current) { // Clean up listeners from the explicitly stopped utterance
+        if (utteranceRef.current) {
           utteranceRef.current.onstart = null;
           utteranceRef.current.onend = null;
           utteranceRef.current.onerror = null;
           utteranceRef.current = null;
         }
-        return; // Exit after stopping
+        return;
       }
 
-      // If this message item is not currently speaking, or nothing is.
-      window.speechSynthesis.cancel(); // Stop any other ongoing speech first
+      window.speechSynthesis.cancel(); 
 
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.lang = 'en-US'; 
       
       const voices = window.speechSynthesis.getVoices();
-      if (voices.length > 0) {
-        const preferredVoice = voices.find(voice => voice.lang === 'en-US' && !voice.default);
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
-        }
+      let voiceToUse: SpeechSynthesisVoice | undefined;
+
+      if (selectedVoiceName) {
+        voiceToUse = voices.find(voice => voice.name === selectedVoiceName);
       }
       
-      utteranceRef.current = utterance; // Store the new utterance
+      if (!voiceToUse && voices.length > 0) {
+        voiceToUse = voices.find(voice => voice.lang === 'en-US' && !voice.default) || 
+                     voices.find(voice => voice.lang === 'en-US') || 
+                     voices.find(voice => voice.lang.startsWith('en'));
+      }
+
+      if (voiceToUse) {
+        utterance.voice = voiceToUse;
+      }
+      
+      utteranceRef.current = utterance;
 
       utterance.onstart = () => {
         setIsSpeakingThisMessage(true);
@@ -64,7 +70,7 @@ export function MessageItem({ message }: MessageItemProps) {
 
       utterance.onend = () => {
         setIsSpeakingThisMessage(false);
-        if (utteranceRef.current === utterance) { // Ensure we only nullify if it's the same utterance
+        if (utteranceRef.current === utterance) { 
           utteranceRef.current = null;
         }
       };
@@ -118,7 +124,6 @@ export function MessageItem({ message }: MessageItemProps) {
           {message.inputImageUrls && message.inputImageUrls.length > 0 && (
             <div className={cn("mb-2 grid gap-2", message.inputImageUrls.length > 1 ? "grid-cols-2 md:grid-cols-3" : "grid-cols-1")}>
               {message.inputImageUrls.map((url, index) => (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img 
                   key={index}
                   src={url} 
@@ -155,7 +160,6 @@ export function MessageItem({ message }: MessageItemProps) {
                   )}
                 </div>
               )}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src={message.imageUrl} 
                 alt={message.text || "Generated image"} 
