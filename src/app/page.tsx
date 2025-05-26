@@ -8,7 +8,7 @@ import { MessageInput } from '@/components/chat/message-input';
 import { nanoid } from 'nanoid'; // For generating unique IDs
 import { chatAssistant, type ChatAssistantInput, type ChatAssistantOutput } from '@/ai/flows/chatAssistantFlow';
 
-import { Settings, Sun, Moon, Palette, Info, Phone, UserCircle } from 'lucide-react';
+import { Settings, Sun, Moon, Palette, Info, Phone, UserCircle, Mail } from 'lucide-react'; // Added Mail
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +21,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-  DropdownMenuPortal, // Added import
+  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ const MOCK_CURRENT_USER: Participant = {
 const AI_ASSISTANT_PARTICIPANT: Participant = {
   id: 'user_ai_assistant',
   name: 'CLOVER AI',
-  avatarUrl: 'https://placehold.co/100x100/4CAF50/FFFFFF.png',
+  avatarUrl: 'https://placehold.co/100x100/4CAF50/FFFFFF.png', // Green placeholder for Clover AI
   status: 'online',
   isCurrentUser: false,
 };
@@ -330,5 +330,3 @@ export default function ChatPage() {
     </div>
   );
 }
-
-    
