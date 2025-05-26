@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { User, Image as ImageIcon, Download, Volume2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface MessageItemProps {
   message: Message;
@@ -14,26 +14,76 @@ interface MessageItemProps {
 export function MessageItem({ message }: MessageItemProps) {
   const isUser = message.sender === 'user';
   const { toast } = useToast();
+  const [isSpeakingThisMessage, setIsSpeakingThisMessage] = useState(false);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Effect to cancel speech if component unmounts while speaking
+  useEffect(() => {
+    return () => {
+      // If this item was speaking and is unmounted, stop its speech.
+      if (isSpeakingThisMessage && utteranceRef.current) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [isSpeakingThisMessage]);
 
   const handleSpeak = (textToSpeak: string) => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel(); // Stop any currently playing speech
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = 'en-US'; // Set language for better voice selection
+      if (isSpeakingThisMessage) {
+        // If this item is currently speaking, stop it.
+        window.speechSynthesis.cancel(); // Stops all speech, including this one.
+        setIsSpeakingThisMessage(false);
+        if (utteranceRef.current) { // Clean up listeners from the explicitly stopped utterance
+          utteranceRef.current.onstart = null;
+          utteranceRef.current.onend = null;
+          utteranceRef.current.onerror = null;
+          utteranceRef.current = null;
+        }
+        return; // Exit after stopping
+      }
 
-      // Attempt to select a non-default US English voice if available
-      // Note: getVoices() can be initially empty and populates asynchronously.
-      // This is a best-effort attempt.
+      // If this message item is not currently speaking, or nothing is.
+      window.speechSynthesis.cancel(); // Stop any other ongoing speech first
+
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'en-US'; 
+      
       const voices = window.speechSynthesis.getVoices();
       if (voices.length > 0) {
         const preferredVoice = voices.find(voice => voice.lang === 'en-US' && !voice.default);
         if (preferredVoice) {
           utterance.voice = preferredVoice;
         }
-        // If no non-default en-US voice, it will use the browser's default for en-US.
       }
+      
+      utteranceRef.current = utterance; // Store the new utterance
+
+      utterance.onstart = () => {
+        setIsSpeakingThisMessage(true);
+      };
+
+      utterance.onend = () => {
+        setIsSpeakingThisMessage(false);
+        if (utteranceRef.current === utterance) { // Ensure we only nullify if it's the same utterance
+          utteranceRef.current = null;
+        }
+      };
+
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event.error);
+        setIsSpeakingThisMessage(false);
+        if (utteranceRef.current === utterance) {
+          utteranceRef.current = null;
+        }
+        toast({
+          variant: 'destructive',
+          title: 'Speech Error',
+          description: `Could not play audio: ${event.error}`,
+        });
+      };
 
       window.speechSynthesis.speak(utterance);
+
     } else {
       toast({
         variant: 'destructive',
@@ -58,14 +108,13 @@ export function MessageItem({ message }: MessageItemProps) {
           className={cn(
             'p-3 rounded-lg shadow-md',
             isUser ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-card text-card-foreground rounded-bl-none',
-            !isUser && 'font-mono' // Apply monospaced font for AI messages
+            !isUser && 'font-mono' 
           )}
         >
           {!isUser && (
             <p className="text-xs font-semibold text-muted-foreground mb-1">{message.userName}</p>
           )}
           
-          {/* Display user-uploaded images if present */}
           {message.inputImageUrls && message.inputImageUrls.length > 0 && (
             <div className={cn("mb-2 grid gap-2", message.inputImageUrls.length > 1 ? "grid-cols-2 md:grid-cols-3" : "grid-cols-1")}>
               {message.inputImageUrls.map((url, index) => (
@@ -89,17 +138,17 @@ export function MessageItem({ message }: MessageItemProps) {
                 <span className="dot-style animate-dot-hover3"></span>
               </div>
             </div>
-          ) : message.imageUrl ? ( // AI-generated image
+          ) : message.imageUrl ? ( 
             <div className="relative group">
               {message.text && (
                 <div className="flex items-start gap-2 mb-2">
                   <p className="text-sm whitespace-pre-wrap flex-grow">{message.text}</p>
-                  {!isUser && message.text && ( // Ensure text exists before showing button
+                  {!isUser && message.text && ( 
                      <button
                         onClick={() => handleSpeak(message.text!)}
                         className="p-1 text-card-foreground/70 hover:text-card-foreground transition-colors shrink-0"
-                        title="Read aloud"
-                        aria-label="Read aloud"
+                        title={isSpeakingThisMessage ? "Stop reading" : "Read aloud"}
+                        aria-label={isSpeakingThisMessage ? "Stop reading" : "Read aloud"}
                       >
                         <Volume2 size={16} />
                       </button>
@@ -123,25 +172,25 @@ export function MessageItem({ message }: MessageItemProps) {
                 <Download className="h-4 w-4" />
               </a>
             </div>
-          ) : message.text ? ( // Regular text message (AI or User)
+          ) : message.text ? ( 
              <div className="flex items-start gap-2">
                 <p className="text-sm whitespace-pre-wrap flex-grow">{message.text}</p>
-                {!isUser && message.text && ( // TTS button only for AI messages, ensure text exists
+                {!isUser && message.text && ( 
                   <button
                     onClick={() => handleSpeak(message.text!)}
                      className="p-1 text-card-foreground/70 hover:text-card-foreground transition-colors shrink-0"
-                    title="Read aloud"
-                    aria-label="Read aloud"
+                    title={isSpeakingThisMessage ? "Stop reading" : "Read aloud"}
+                    aria-label={isSpeakingThisMessage ? "Stop reading" : "Read aloud"}
                   >
                     <Volume2 size={16} />
                   </button>
                 )}
               </div>
-          ) : !(message.inputImageUrls && message.inputImageUrls.length > 0) ? ( // If no text, no AI image, and no user uploaded image(s)
+          ) : !(message.inputImageUrls && message.inputImageUrls.length > 0) ? ( 
              <p className="text-sm text-muted-foreground italic flex items-center gap-1">
               <ImageIcon size={14} /> Empty message
             </p>
-          ) : null /* If only inputImageUrls, text can be empty, so render nothing extra here */ }
+          ) : null }
         </div>
         <p className="text-xs text-muted-foreground mt-1 px-1">
           {message.isLoading ? 'thinking...' : formatDistanceToNow(message.timestamp, { addSuffix: true })}
