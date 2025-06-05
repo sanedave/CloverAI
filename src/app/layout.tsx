@@ -1,6 +1,5 @@
-
 import type {Metadata} from 'next';
-import {Geist, Geist_Mono} from 'next/font/google';
+import { GeistSans as Geist, GeistMono as Geist_Mono } from '@vercel/geist/font';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
